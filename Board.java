@@ -12,7 +12,6 @@ public class Board implements BoardDesign {
     JButton buttonMancalaB = new JButton();
 
     /**
-     * Create a vertical style board
      * 
      * @return the board as an Icon
      */
