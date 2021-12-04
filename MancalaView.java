@@ -1,5 +1,10 @@
+
 /**
- * This is he View and Controller
+ * This is he View and Controller.
+ * Take in the model, strategy.
+ * Construct to the board view with or without model
+ * Display the menu for user to choose between 3 or 4 stones sto start the game.
+ * Display the game board
  */
 import java.util.*;
 import java.awt.*;
@@ -13,227 +18,260 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class MancalaView extends JFrame implements ChangeListener {
+    private static final int undoMax = 3;
+    private static final int turnA = 0;
+    private static final int turnB = 1;
+    private static final int AFinalPit = 5;
+    private static final int BFinalPit = 11;
+    private static final int BFirstPit = 6;
+    private BoardDesign boardDesign; // Strategy
+    private BoardModel model; // Model
 
-    private static final int LAST_PIT_OF_A = 5;
-    private static final int LAST_PIT_OF_B = 11;
-    private static final int FIRST_PIT_OF_B = 6;
-    private static final int A_TURN = 0;
-    private static final int B_TURN = 1;
-    private static final int MAX_NUM_OF_UNDOS = 3;
-    private BoardModel theModel;
-    private BoardDesign boardDesign; // general strategy
-    private ArrayList<JButton> pits = new ArrayList<>();// JButtons Representing Pits
-    private boolean mancalaHasReached = false;
-    private int undoMoveA;
-    private int undoMoveB;
-    private int currentTurn; // 0 - A; 1 - B
+    private ArrayList<JButton> pits = new ArrayList<>(); // Pits
+    private boolean atMancala = false; // If a player lands in their respective Mancala Pit
+    private int player_A_undo;
+    private int player_B_undo;
+    private int player_turn; // Turn A: 0, Turn B: 1
 
     public MancalaView() {
-        this.theModel = null;
-        undoMoveA = MAX_NUM_OF_UNDOS;
-        undoMoveB = MAX_NUM_OF_UNDOS;
-        currentTurn = A_TURN;
-        DisplayMainMenu();
+        this.model = null;
+        player_A_undo = undoMax;
+        player_B_undo = undoMax;
+        player_turn = turnA;
+        Menu();
     }
 
-    public MancalaView(BoardModel theModel) {
-        this.theModel = theModel;
-        undoMoveA = MAX_NUM_OF_UNDOS;
-        undoMoveB = MAX_NUM_OF_UNDOS;
-        currentTurn = A_TURN;
-        DisplayMainMenu();
+    /**
+     * @param model This is the model parameter
+     */
+    public MancalaView(BoardModel model) {
+        this.model = model;
+        player_A_undo = undoMax;
+        player_B_undo = undoMax;
+        player_turn = turnA;
+        Menu();
     }
 
-    public void DisplayMainMenu() {
-
+    /**
+     * This is the list of menu where player can choose between 3 or 4 stone to
+     * play.
+     */
+    public void Menu() {
         JFrame frame = new JFrame("Mancala Maker Group 9");
         frame.setLayout(new FlowLayout());
-        JButton three_stone_board = new JButton("Play with 3 stones");
-        JButton four_stone_board = new JButton("Play with 4 stones");
-        three_stone_board.addActionListener(e -> {
-            theModel.initializeTheBoard(3);
+        JButton threeStones = new JButton("Play with 3 stones");
+        JButton fourStones = new JButton("Play with 4 stones");
+        threeStones.addActionListener(e -> {
+            model.initializeTheBoard(3);
             boardDesign = new Board();
             frame.dispose();
             displayBoard();
         });
 
-        four_stone_board.addActionListener(e -> {
-            theModel.initializeTheBoard(4);
+        fourStones.addActionListener(e -> {
+            model.initializeTheBoard(4);
             boardDesign = new Board();
             frame.dispose();
             displayBoard();
         });
-        frame.add(three_stone_board);
-        frame.add(four_stone_board);
+        frame.add(threeStones);
+        frame.add(fourStones);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
     }
 
+    /**
+     * Display the game board
+     */
     public void displayBoard() {
         setLayout(new BorderLayout(100, 100));
+        // Pits for Player A
+        JButton pit1AButton = new JButton();
+        JButton pit2AButton = new JButton();
+        JButton pit3AButton = new JButton();
+        JButton pit4AButton = new JButton();
+        JButton pit5AButton = new JButton();
+        JButton pit6AButton = new JButton();
+        // Pits for Player B
+        JButton pit1BButton = new JButton();
+        JButton pit2BButton = new JButton();
+        JButton pit3BButton = new JButton();
+        JButton pit4BButton = new JButton();
+        JButton pit5BButton = new JButton();
+        JButton pit6BButton = new JButton();
+        // Add Pits to ArrayList
+        pits.add(pit1AButton);
+        pits.add(pit2AButton);
+        pits.add(pit3AButton);
+        pits.add(pit4AButton);
+        pits.add(pit5AButton);
+        pits.add(pit6AButton);
+        pits.add(pit1BButton);
+        pits.add(pit2BButton);
+        pits.add(pit3BButton);
+        pits.add(pit4BButton);
+        pits.add(pit5BButton);
+        pits.add(pit6BButton);
 
-        // Buttons representing pits belonging to player A
-        JButton A_pit_1_Button = new JButton();
-        JButton A_pit_2_Button = new JButton();
-        JButton A_pit_3_Button = new JButton();
-        JButton A_pit_4_Button = new JButton();
-        JButton A_pit_5_Button = new JButton();
-        JButton A_pit_6_Button = new JButton();
-
-        // Buttons representing pits belonging to player B
-        JButton B_pit_1_Button = new JButton();
-        JButton B_pit_2_Button = new JButton();
-        JButton B_pit_3_Button = new JButton();
-        JButton B_pit_4_Button = new JButton();
-        JButton B_pit_5_Button = new JButton();
-        JButton B_pit_6_Button = new JButton();
-
-        // Add JButtons belonging to player A to ArrayList of pits
-        pits.add(A_pit_1_Button);
-        pits.add(A_pit_2_Button);
-        pits.add(A_pit_3_Button);
-        pits.add(A_pit_4_Button);
-        pits.add(A_pit_5_Button);
-        pits.add(A_pit_6_Button);
-
-        // Add JButtons belonging to player B to ArrayList of pits
-        pits.add(B_pit_1_Button);
-        pits.add(B_pit_2_Button);
-        pits.add(B_pit_3_Button);
-        pits.add(B_pit_4_Button);
-        pits.add(B_pit_5_Button);
-        pits.add(B_pit_6_Button);
-
-        // northPanel
+        // Message Board
         JTextArea messageBoard = new JTextArea();
         messageBoard.setColumns(40);
         messageBoard.setRows(1);
+        messageBoard.setText("Game Start!");
 
-        // messageBoard.setText("Game on!");
-
+        /**
+         * THIS IS THE CONTROLLER
+         */
         for (int i = 0; i < pits.size(); i++) {
             pits.get(i).setBackground(new Color(188, 107, 0));
             pits.get(i).setPreferredSize(new Dimension(100, 120));
             pits.get(i).setBorderPainted(false);
 
-            // Add a listener to pits and update model if button is pressed
+            /**
+             * Add a listener for each pit in the ArrayList, No Listener is added to the
+             * Mancala Pits
+             */
             pits.get(i).addMouseListener(new Pit(i) {
                 public void mousePressed(MouseEvent e) {
                     int mouseID = this.getMouseListenerID();
-                    // prevents player A from going on player B's turn
-                    if (currentTurn == B_TURN && mouseID <= LAST_PIT_OF_A) {
-                        messageBoard.setText("PLAYER B 's TURN ");
+                    /**
+                     * Stop Player B from using Player A's Pits
+                     */
+                    if (player_turn == turnB && mouseID <= AFinalPit) {
+                        messageBoard.setText("Player B's Turn, must use Pits B1-B6");
                     }
-                    // prevents player B from going on player A's turn
-                    else if (currentTurn == A_TURN && mouseID <= LAST_PIT_OF_B && mouseID >= FIRST_PIT_OF_B) {
-                        messageBoard.setText("PLAYER A 's TURN ");
-                    } else if (mouseID >= 6 && theModel.getAmountInPit(mouseID + 1) == 0) {
-                        messageBoard.setText(" NO MORE STONE !");
-                    } else if (mouseID < 6 && theModel.getAmountInPit(mouseID) == 0) {
-                        messageBoard.setText(" NO MORE STONE !");
-                    } else if (currentTurn == A_TURN && mouseID <= LAST_PIT_OF_A) {
-                        theModel.move(mouseID);
-                        if (theModel.isLastStoneOnBoard()) {
-                            currentTurn = A_TURN;
-                            messageBoard.setText(" GO AGAIN !");
-                            mancalaHasReached = true;
-                        } else {
-                            currentTurn = B_TURN;
-                            mancalaHasReached = false;
-                        }
-                        undoMoveB = MAX_NUM_OF_UNDOS;
-                    } else if (currentTurn == B_TURN && mouseID <= LAST_PIT_OF_B && mouseID >= FIRST_PIT_OF_B) {
-                        theModel.move(mouseID);
-                        if (theModel.isLastStoneOnBoard()) {
-                            currentTurn = B_TURN;
-                            messageBoard.setText(" GO AGAIN !");
-                            mancalaHasReached = true;
-                        } else {
-                            currentTurn = A_TURN;
-                            mancalaHasReached = false;
-                        }
-                        undoMoveA = MAX_NUM_OF_UNDOS;
+                    /**
+                     * Stop player A from using Player B's Pits
+                     */
+                    else if (player_turn == turnA && mouseID <= BFinalPit && mouseID >= BFirstPit) {
+                        messageBoard.setText("Player A's Turn, must use Pits A1-A6");
                     }
-
-                    // Check if the game is over
-                    int gameOverFlag = theModel.checkIfGameOver();
-                    if (gameOverFlag > 0) {
-                        int winner = theModel.checkWinner(gameOverFlag);
+                    /**
+                     * Stop player B from using an Empty Pit
+                     */
+                    else if (mouseID >= 6 && model.getAmountInPit(mouseID + 1) == 0) {
+                        messageBoard.setText("No Stones, choose another Pit");
+                    }
+                    /**
+                     * Stop player A from using an Empty Pit
+                     */
+                    else if (mouseID < 6 && model.getAmountInPit(mouseID) == 0) {
+                        messageBoard.setText("No Stones, choose another Pit");
+                    } else if (player_turn == turnA && mouseID <= AFinalPit) {
+                        model.move(mouseID);
+                        /**
+                         * Checks if Player A landed in Mancala
+                         */
+                        if (model.isMancalaMaker()) {
+                            player_turn = turnA;
+                            messageBoard.setText("Player A Mancala! Go Again!");
+                            atMancala = true;
+                        } else {
+                            player_turn = turnB;
+                            messageBoard.setText("Player B's Turn");
+                            atMancala = false;
+                        }
+                        player_B_undo = undoMax;
+                    } else if (player_turn == turnB && mouseID <= BFinalPit && mouseID >= BFirstPit) {
+                        model.move(mouseID);
+                        /**
+                         * Checks if Player B landed in Mancala
+                         */
+                        if (model.isMancalaMaker()) {
+                            player_turn = turnB;
+                            messageBoard.setText("Player B Mancala! Go Again!");
+                            atMancala = true;
+                        } else {
+                            player_turn = turnA;
+                            messageBoard.setText("Player A's Turn");
+                            atMancala = false;
+                        }
+                        player_A_undo = undoMax;
+                    }
+                    /**
+                     * Flag gameover
+                     */
+                    int flag_gameover = model.checkIfGameOver();
+                    if (flag_gameover > 0) {
+                        int winner = model.checkWinner(flag_gameover);
                         if (winner == 1)
-                            messageBoard.setText(" GAME OVER - PLAYER A IS THE WINNER !");
+                            messageBoard.setText("Player A Wins the Game!");
                         else if (winner == 2)
-                            messageBoard.setText(" GAME OVER - PLAYER B IS THE WINNER !");
+                            messageBoard.setText("Player B Wins the Game!");
                         else if (winner == 3)
-                            messageBoard.setText(" GAME OVER - NO WINNER !");
+                            messageBoard.setText("No Winner!");
                     }
                 }
             });
         }
-
-        int[] mancalaData = theModel.getCurrentBoard();
-
-        // Center
-        JLabel center = new JLabel(boardDesign.createBoard());
-        boardDesign.addStonesToPits(pits, mancalaData);
-        boardDesign.addPitsToBoard(pits, center);
+        /**
+         * Adding Board to the View
+         */
+        int[] game_data = model.getCurrentGameBoard();
+        //
+        JLabel center = new JLabel(boardDesign.boardCreater());
+        boardDesign.addStone(pits, game_data);
+        boardDesign.addPit(pits, center);
         add(center, BorderLayout.CENTER);
-
-        // North
+        /**
+         * Adding message board to the View
+         */
         JPanel northPanel = new JPanel();
         northPanel.add(messageBoard);
         add(northPanel, BorderLayout.NORTH);
-
-        // South
+        /**
+         * Undo Button
+         */
         JPanel southPanel = new JPanel();
         JTextField undoCountText = new JTextField(100);
-        undoCountText.setText(" UNDO # ");
-        JButton undoButton = new JButton(" UNDO # ");
+        undoCountText.setText("Press Undo To Undo your Move!");
+
+        /**
+         * THIS IS THE CONTROLLER of the game
+         */
+        JButton undoButton = new JButton("UNDO");
         undoButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (Arrays.equals(theModel.getCurrentBoard(), theModel.getPreviousBoard())) {
-                    undoCountText.setText(" MOVE TO USE UNDO ");
-                } else if (currentTurn == B_TURN && undoMoveA <= 0) {
-                    undoCountText.setText(" NO MORE UNDO !");
-                } else if (currentTurn == A_TURN && undoMoveB <= 0) {
-                    undoCountText.setText(" NO MORE UNDO !");
-                } else if (mancalaHasReached && currentTurn == B_TURN) {
-                    undoMoveB--;
-                    undoCountText.setText("PLAYER B: " + undoMoveB);
-                    theModel.undoMove();
-                    if (Arrays.equals(theModel.getCurrentBoard(), theModel.getPreviousBoard())) {
-                        currentTurn = B_TURN;// still B's turn since B got a free turn for reaching own Mancala
+                if (Arrays.equals(model.getCurrentGameBoard(), model.getpreBoard())) {
+                    undoCountText.setText("No Moves to undo");
+                } else if (player_turn == turnB && player_A_undo <= 0) {
+                    undoCountText.setText("No More Undo's!");
+                } else if (player_turn == turnA && player_B_undo <= 0) {
+                    undoCountText.setText("No More Undo's!");
+                } else if (atMancala && player_turn == turnB) {
+                    player_B_undo--;
+                    undoCountText.setText("Player B has " + player_B_undo + " more undo's");
+                    model.undo_click();
+                    if (Arrays.equals(model.getCurrentGameBoard(), model.getpreBoard())) {
+                        player_turn = turnB;// B's turn because PLayer B Reached Mancala
                     }
-                    mancalaHasReached = false;
-                } else if (mancalaHasReached && currentTurn == A_TURN) {
-                    undoMoveA--;
-                    undoCountText.setText("PLAYER A: " + undoMoveA);
-                    theModel.undoMove();
-                    if (Arrays.equals(theModel.getCurrentBoard(), theModel.getPreviousBoard())) {
-                        currentTurn = A_TURN;// still A's turn since A got a free turn for reaching own Mancala
+                    atMancala = false;
+                } else if (atMancala && player_turn == turnA) {
+                    player_A_undo--;
+                    undoCountText.setText("Player A has " + player_A_undo + " more undo's");
+                    model.undo_click();
+                    if (Arrays.equals(model.getCurrentGameBoard(), model.getpreBoard())) {
+                        player_turn = turnA;// A's turn because PLayer A Reached Mancala
                     }
-                    mancalaHasReached = false;
-                } else if (currentTurn == A_TURN) { // was B's turn and A did not reach Mancala, then B undo so turn
-                                                    // goes back to B
-                    undoMoveB--;
-                    undoCountText.setText("#UNDO OF PLAYER B: " + undoMoveB);
-                    theModel.undoMove();
-                    currentTurn = B_TURN;
-                } else if (currentTurn == B_TURN) { // was A's turn and A did not reach Mancala, then A undo so turn
-                                                    // goes back to A
-                    undoMoveA--;
-                    undoCountText.setText("#UNDO OF PLAYER A: " + undoMoveA);
-                    theModel.undoMove();
-                    currentTurn = A_TURN;
+                    atMancala = false;
+                } else if (player_turn == turnA) { // Switch Turns because Mancala was not reached the 'previous' turn
+                    player_B_undo--;
+                    undoCountText.setText("Player B has " + player_B_undo + " more undo's");
+                    model.undo_click();
+                    player_turn = turnB;
+                } else if (player_turn == turnB) { // Switch Turns because Mancala was not reached the 'previous' turn
+                    player_A_undo--;
+                    undoCountText.setText("Player A has " + player_A_undo + " more undo's");
+                    model.undo_click();
+                    player_turn = turnA;
                 }
             }
         });
         southPanel.add(undoCountText);
         southPanel.add(undoButton);
         add(southPanel, BorderLayout.SOUTH);
-
-        // setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         pack();
         setVisible(true);
@@ -242,11 +280,11 @@ public class MancalaView extends JFrame implements ChangeListener {
     /**
      * Called when the data in the model is changed.
      * 
-     * @param e the event representing the change
+     * @param event This is the event change parameter
      */
-    public void stateChanged(ChangeEvent e) {
-        int[] mancalaData = theModel.getCurrentBoard();
-        boardDesign.addStonesToPits(pits, mancalaData);
+    public void stateChanged(ChangeEvent event) {
+        int[] game_data = model.getCurrentGameBoard();
+        boardDesign.addStone(pits, game_data);
         repaint();
     }
 }

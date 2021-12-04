@@ -5,9 +5,9 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 
 public interface BoardDesign {
-    Icon createBoard();
+    Icon boardCreater();
 
-    void addStonesToPits(ArrayList<JButton> pits, int[] pitsData);
+    void addStone(ArrayList<JButton> pits, int[] pitsData);
 
-    void addPitsToBoard(ArrayList<JButton> pits, JLabel label);
+    void addPit(ArrayList<JButton> pits, JLabel label);
 }

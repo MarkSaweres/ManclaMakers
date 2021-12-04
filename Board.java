@@ -1,23 +1,24 @@
+
+/**
+ * This  class will create the board by JButton, return board icon, 
+ * Make a board, paint the board, add stone to the pit
+ */
+
 import java.util.*;
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import javax.swing.Icon;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import java.awt.geom.Rectangle2D;
+import javax.swing.Icon;
+import javax.swing.JButton;
+import java.util.ArrayList;
 
 public class Board implements BoardDesign {
-    JButton buttonMancalaA = new JButton();
-    JButton buttonMancalaB = new JButton();
-
-    /**
-     * 
-     * @return the board as an Icon
-     */
+    JButton playerA = new JButton();
+    JButton playerB = new JButton();
 
     @Override
-    public Icon createBoard() {
+    public Icon boardCreater() {
         return new Icon() {
             @Override
             public void paintIcon(Component c, Graphics g, int x, int y) {
@@ -40,21 +41,21 @@ public class Board implements BoardDesign {
     }
 
     /**
-     * Add stones to the pits
+     * This method is to add stones to the pit
      * 
-     * @param pits This is all of pits
-     * @param pitsData This is the number of stones in each pit
+     * @param pits This is the pits parameter
+     * @param pitsData This is the number of stones parameter
      */
     @Override
-    public void addStonesToPits(ArrayList<JButton> pits, int[] pitsData) {
+    public void addStone(ArrayList<JButton> pits, int[] pitsData) {
         for (int i = 0; i < pitsData.length; i++) {
             Stone stones = new Stone(pitsData[i]);
             stones.setIconHeight(100);
             stones.setIconWidth(90);
             if (i == 6)
-                buttonMancalaA.setIcon(stones);
+                playerA.setIcon(stones);
             else if (i == 13)
-                buttonMancalaB.setIcon(stones);
+                playerB.setIcon(stones);
             else if (i > 6)
                 pits.get(i - 1).setIcon(stones);
             else
@@ -65,32 +66,32 @@ public class Board implements BoardDesign {
     /**
      * Add all the pits and labels to the board
      * 
-     * @param pits This is the list of all of pits
-     * @param label This is the game board
+     * @param pits  - list of all JButtons of pits
+     * @param label - main Mancala Board
      */
     @Override
-    public void addPitsToBoard(ArrayList<JButton> pits, JLabel label) {
+    public void addPit(ArrayList<JButton> pits, JLabel label) {
 
         // Create A and B Mancala pits as Buttons
-        Color dark = new Color(128,70,0);
-        buttonMancalaA.setBackground(dark);
-        buttonMancalaA.setPreferredSize(new Dimension(100, 500));
-        buttonMancalaB.setBackground(dark);
-        buttonMancalaB.setPreferredSize(new Dimension(100, 500)); 
+        Color dark = new Color(128, 70, 0);
+        playerA.setBackground(dark);
+        playerA.setPreferredSize(new Dimension(100, 500));
+        playerB.setBackground(dark);
+        playerB.setPreferredSize(new Dimension(100, 500));
 
         // Create Mancala A and B
         JButton mancalaA = new JButton("Player A's" + "\n" + " Mancala");
         mancalaA.setFont(new Font("Courier", Font.BOLD, 20));
         mancalaA.setBackground(new Color(255, 255, 255));
 
-        JButton mancalaB = new JButton("Player B's" + "\n"+ " Mancala");
+        JButton mancalaB = new JButton("Player B's" + "\n" + " Mancala");
         mancalaB.setFont(new Font("Courier", Font.BOLD, 20));
         mancalaB.setBackground(new Color(255, 255, 255));
 
         // Set layout for the board and add Mancala A and Mancala B
         label.setLayout(new FlowLayout());
         label.add(mancalaB);
-        label.add(buttonMancalaB);
+        label.add(playerB);
 
         // Panel to hold A and B pits + labels
         JPanel mainPanel = new JPanel();
@@ -101,7 +102,7 @@ public class Board implements BoardDesign {
         for (int i = 6; i > 0; i--) {
             JButton pitLabels = new JButton("B" + i);
             pitLabels.setFont(new Font("Courier", Font.BOLD, 20));
-            pitLabels.setBackground(new Color(255, 255, 255));
+            pitLabels.setBackground(new Color(226, 236, 0));
             ;
             pitLabels.setOpaque(true);
             pitLabels.setBorderPainted(false);
@@ -122,13 +123,13 @@ public class Board implements BoardDesign {
         for (int i = 1; i <= 6; i++) {
             JButton pitLabels = new JButton("A" + i);
             pitLabels.setFont(new Font("Courier", Font.BOLD, 20));
-            pitLabels.setBackground(new Color(255, 255, 255));
+            pitLabels.setBackground(new Color(25, 229, 5));
             pitLabels.setOpaque(true);
             pitLabels.setBorderPainted(false);
             mainPanel.add(pitLabels);
         }
         label.add(mainPanel);
-        label.add(buttonMancalaA);
+        label.add(playerA);
         label.add(mancalaA);
     }
 }

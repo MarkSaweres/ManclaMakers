@@ -1,33 +1,28 @@
+
+/**
+ * This Pit class is use MouseAdapter to
+ * identify each pit on the board to keep track of each pit when mouse is pressed
+ * 
+ */
+
 import java.util.*;
 import java.awt.event.MouseAdapter;
 
 public class Pit extends MouseAdapter {
-    private int mouseID; // ID of mouse corresponding to a certain button/pit
+    private int identify;
 
     /**
-     * Constructs a PitMouseListener with a particular identifier.
-     * 
-     * @param mouseID is the identifier of a particular pit on the board.
+     * @param identify This is the identify parameter
      */
-    public Pit(int mouseID) {
+    public Pit(int identify) {
         super();
-        this.mouseID = mouseID;
+        this.identify = identify;
     }
 
     /**
-     * Accessor to the mouseID
-     * 
-     * @return the integer representing the mouseID
+     * @return This will return the identify
      */
     public int getMouseListenerID() {
-        return mouseID;
+        return identify;
     }
-
-    /**
-     * toString method used for testing for bugs in the game.
-     */
-    public String toString() {
-        return "PitMouseListener [mouseID=" + mouseID + "]";
-    }
-
 }
