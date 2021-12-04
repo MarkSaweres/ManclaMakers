@@ -1,7 +1,3 @@
-import java.util.*;
-import java.util.ArrayList;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 /**
  * This class serves as the model of the MVC. This model contains the data for
@@ -13,340 +9,301 @@ import javax.swing.event.ChangeListener;
  * action once the model notifies them of changes. This class also contains
  * accessors and mutator methods for the data and states of the game.
  */
+import java.util.*;
+import java.util.ArrayList;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public class BoardModel {
-
-    private int[] previousBoard;
-    private int[] currentBoard;
     private boolean mancalaMaker;
-    private ArrayList<ChangeListener> arrayOfListeners; // will only contain View Listener
-    private int numberOfUndos;
-    private static final int numPits = 14;
+    private int[] preBoard;
+    private int[] currentGameBoard;
+    private ArrayList<ChangeListener> change_listener;
 
-    // Position of Mancala A and B in the Array
-    //[Apit1,Apit2,Apit3,Apit4,Apit5,Apit6,mancalaA,Bpit1,Bpit2,Bpit3,Bpit4,Bpit5,Bpit6,mancalaB]
+    /**
+     * [Apit1,Apit2,Apit3,Apit4,Apit5,Apit6,mancalaA,Bpit1,Bpit2,Bpit3,Bpit4,Bpit5,Bpit6,mancalaB]
+     */
     private static final int mancalaA = 6;
     private static final int mancalaB = 13;
+    private static final int numPits = 14;
 
-    /**
-     * Constructs an empty MancalaBoardModel.
-     */
     public BoardModel() {
-        currentBoard = new int[numPits];
-        previousBoard = currentBoard.clone();
+        currentGameBoard = new int[numPits];
+        preBoard = currentGameBoard.clone();
         mancalaMaker = false;
-        arrayOfListeners = new ArrayList<>();
-        numberOfUndos = 0;
+        change_listener = new ArrayList<>();
     }
 
     /**
-     * Sets the number of stones in each pit in the mancala board, excluding the
-     * mancalas.
-     * 
-     * @param numStones the number of stones in each pit
+     * @param numStones This is the stones parameter
      */
     public void initializeTheBoard(int numStones) {
-
-        for (int i = 0; i < currentBoard.length; i++) {
+        for (int i = 0; i < currentGameBoard.length; i++) {
             if (i == mancalaA || i == mancalaB) {
-                currentBoard[i] = 0;
+                currentGameBoard[i] = 0;
             } else {
-                currentBoard[i] = numStones;
+                currentGameBoard[i] = numStones;
             }
         }
-        previousBoard = currentBoard.clone();
+        preBoard = currentGameBoard.clone();
     }
 
     /**
-     * Constructs a Mancala Board with specified number of stones in each pit, and 0
-     * stones in Mancalas
-     * 
-     * @param numStones the number of stones each pit initially contains
+     * @param numStones This is the stones parameter
      */
     public BoardModel(int numStones) {
-        /*
-         * index 0 - 6: player A, index 7 - 13: B
-         * index 6 and 13 correspond to Mancalas
-         * Layout of the Board:
-         * A1 - A6 - Mancala A
-         * B1 - B6 - Mancala B
-         */
-        currentBoard = new int[] {
+        currentGameBoard = new int[] {
                 numStones, numStones, numStones, numStones,
                 numStones, numStones, 0, numStones, numStones,
                 numStones, numStones, numStones, numStones, 0
         };
-        previousBoard = currentBoard.clone();
+        preBoard = currentGameBoard.clone();
         mancalaMaker = false;
-        arrayOfListeners = new ArrayList<>();
-        numberOfUndos = 0;
+        change_listener = new ArrayList<>();
     }
 
     /**
-     * Gets the current board.
-     * 
-     * @return the current board
+     * @return This will return the current board
      */
-    public int[] getCurrentBoard() {
-        return currentBoard.clone();
+    public int[] getCurrentGameBoard() {
+        return currentGameBoard.clone();
     }
 
     /**
-     * Gets the previous board.
-     * 
-     * @return the previous board
+     * @return This will return the prev board
      */
-    public int[] getPreviousBoard() {
-        return previousBoard.clone();
+    public int[] getpreBoard() {
+        return preBoard.clone();
     }
 
     /**
-     * Gets the number of stones in specified pit number.
-     * 
-     * @param pitNumber the pit number
-     * @return the number of stones in the specified pit number
+     * @param pn This is the pit number parameter
+     * @return This will return stones in pit number
      */
-    public int getAmountInPit(int pitNumber) {
-        return currentBoard[pitNumber];
+    public int getAmountInPit(int pn) {
+        return currentGameBoard[pn];
     }
 
     /**
-     * Checks if the last stone was dropped in a Mancala.
+     * @return This will return true if there is a last stone otherwise false
      * 
-     * @return the boolean value of lastStoneInMancala; true allows player another
-     *         turn
      */
-    public boolean isMancalaMaker() // we will use this in Control to prompt player to go again
-    {
+    public boolean isMancalaMaker() {
         return mancalaMaker;
     }
 
     /**
-     * Determines the winner of the game by comparing the number of stones collected
-     * in each players Mancala after
-     * all the remaining stones in the board are properly distributed.
-     * The winner has the greater number of stones.
      * 
-     * @param emptyPitFlag value passed in that dictates the player that receives
-     *                     the remaining stones on the board
-     * @return 1 if winner is A or
-     *         2 if the winner is B or
-     *         3 if there is a tie
+     * @param pit_flag This is the flag parameter
+     * @return This will return either player A or B is the winner
      */
-    public int checkWinner(int emptyPitFlag) {
+    public int checkWinner(int pit_flag) {
+        /**
+         * If A's Pits are empty
+         * -move stones in BPits to B's mancala pit.
+         * If B's Pits are empty
+         * -move stones in APits to A's mancala pit.
+         */
+        if (pit_flag == 1) {
+            moveStonesToMancala(7, mancalaB);
 
-        if (emptyPitFlag == 1) { // If A's Pits are empty
-            moveStonesToMancala(7, mancalaB); // move stones in BPits to B's mancala pit
-
-        } else if (emptyPitFlag == 2) { // If B's Pits are empty
-            moveStonesToMancala(0, mancalaA); // move stones in APits to A's mancala pit
+        } else if (pit_flag == 2) {
+            moveStonesToMancala(0, mancalaA);
         }
 
-        // Compare A's Mancala Pit to B's
-        if (currentBoard[mancalaA] > currentBoard[mancalaB])
+        /**
+         * Compare A's Mancala Pit to B's
+         */
+        if (currentGameBoard[mancalaA] > currentGameBoard[mancalaB])
             return 1;
-        else if (currentBoard[mancalaA] < currentBoard[mancalaB])
+        else if (currentGameBoard[mancalaA] < currentGameBoard[mancalaB])
             return 2;
         else
             return 3;
     }
 
     /**
-     * Checks if the game is over when pits belonging to either player are all
-     * empty.
-     * 
-     * @return 0 if game is not over
-     *         1 if game is over and only A pits are empty
-     *         2 if game is over and only B pits are empty
+     * @return This will return a number whether player A or B pit is empty
      */
     public int checkIfGameOver() {
-
         boolean mancalaA_Empty = false, mancalaB_Empty = false;
-
-        // Check if all A's pits are empty
         for (int pitA = 0; pitA < mancalaA; pitA++) {
-            if (currentBoard[pitA] != 0) {
+            if (currentGameBoard[pitA] != 0) {
                 mancalaA_Empty = false;
                 break;
             } else
                 mancalaA_Empty = true;
         }
-
-        // Check if all B's pits are empty
         for (int pitB = 7; pitB < mancalaB; pitB++) {
-            if (currentBoard[pitB] != 0) {
+            if (currentGameBoard[pitB] != 0) {
                 mancalaB_Empty = false;
                 break;
             } else
                 mancalaB_Empty = true;
         }
-        
-        //returns which side is empty, if a side is empty
-        if(mancalaA_Empty){
+
+        /**
+         * Returns which side is empty, if a side is empty
+         */
+        if (mancalaA_Empty) {
             return 1;
-        }
-        else if(mancalaB_Empty){
+        } else if (mancalaB_Empty) {
             return 2;
-        }
-        else{
+        } else {
             return 0;
         }
-
     }
 
     /**
-     * Sums up the remaining stones on the board and adds that to the mancala
-     * specified by the mancalaPos,
-     * then notifies the listeners of the change in the model's state.
-     * 
-     * @param pitPos     the starting position of the summation.
-     * @param mancalaPos the position of the mancala that will receive the rest of
-     *                   the stones.
+     * @param pitposition This is the pit position parameter
+     * @param manposition This is the mancala position parameter
      */
-    public void moveStonesToMancala(int pitPos, int mancalaPos) {
-        for (int i = pitPos; i < mancalaPos; i++) {
-            currentBoard[mancalaPos] += currentBoard[i];
-            currentBoard[i] = 0;
+    public void moveStonesToMancala(int pitposition, int manposition) {
+        for (int i = pitposition; i < manposition; i++) {
+            currentGameBoard[manposition] += currentGameBoard[i];
+            currentGameBoard[i] = 0;
         }
-        for (ChangeListener l : arrayOfListeners) {
+        for (ChangeListener l : change_listener) {
             l.stateChanged(new ChangeEvent(this));
         }
     }
 
     /**
-     * Given the pit number and the number of stones currently in the pit, the
-     * function redistributes the stones across
-     * the board according to the rules of the mancala game.
-     * First exception is when a player has their last stone dropped in their own
-     * Mancala, resulting in a free turn.
-     * Second exception is when a player's last stone dropped is in an empty pit on
-     * their side of the board.
-     * This results in the player getting to add the stones in the last pit and the
-     * stones in the pit across from that on
-     * the opponent's side into their own Mancala.
-     * 
-     * @param pitNumber the pit number chosen by the user
+     * @param num This is the pit number parameter
      */
-    public void move(int pitNumber) { 
+    public void move(int num) {
 
-        boolean turnA = true;
-        int ownPitNumber = pitNumber;
-        if (pitNumber > 5) {
-            turnA = false;
-            pitNumber = pitNumber + 1;
-            ownPitNumber = pitNumber - 7;
+        boolean player_A_turn = true;
+        int pit_own = num;
+        if (num > 5) {
+            player_A_turn = false;
+            num = num + 1;
+            pit_own = num - 7;
         }
-        if (currentBoard[pitNumber] != 0) {
-            previousBoard = currentBoard.clone(); // save current board to previous board to allow for undo's
+        if (currentGameBoard[num] != 0) {
+            preBoard = currentGameBoard.clone();
             mancalaMaker = false;
-            int stoneCount = currentBoard[pitNumber]; //saves number of stones in selected pit
-            int oPitNumber = pitNumber; //saves origional pit number
-            int endingPit = pitNumber + stoneCount; //calculates ending pit number
-
-            //Opponent mancala will always be 13 away from ownPitNumber
+            int count_stone = currentGameBoard[num];
+            int pit_number = num;
+            int pit_end = num + count_stone;
+            /**
+             * Opponent mancala will always be 13 away from pit_own
+             */
             boolean opponMancReached = false;
-            if (ownPitNumber + stoneCount >= 13) {
+            if (pit_own + count_stone >= 13) {
                 opponMancReached = true;
             }
-
-            //if stones end in your own mancala, set mancalaMaker true for an extra turn
-            if (ownPitNumber + stoneCount == 6) {
+            /**
+             * If stones end in your own mancala, set mancalaMaker true for an extra turn
+             */
+            if (pit_own + count_stone == 6) {
                 mancalaMaker = true;
-                // System.out.println("You get another turn!");
+                System.out.println("Congratulation! Extra turn");
             }
 
-            // distributes stones from selected pit
-            for (int i = 1; i <= stoneCount; i++) {
-                if ((pitNumber + i) == 14) {
-                    pitNumber = -1 * i; //after reaching opponents last pit, start from beggining
+            /**
+             * Distributes stones from selected pit
+             * after reaching opponents last pit, start from beggining
+             * adds a stone to each pit
+             */
+            for (int i = 1; i <= count_stone; i++) {
+                if ((num + i) == 14) {
+                    num = -1 * i; //
                 }
-                currentBoard[pitNumber + i] = currentBoard[pitNumber + i] + 1; //adds a stone to each pit
+                currentGameBoard[num + i] = currentGameBoard[num + i] + 1;
             }
-            // removes stones from selected pit
-            currentBoard[oPitNumber] = 0;
+            /**
+             * Removes stones from selected pit
+             */
+            currentGameBoard[pit_number] = 0;
 
             /*
-             * A's last stone dropped lands in an empty pit on A's side, so A gets to add
-             * the stones in that last pit and the stones
-             * on the opponent's side that is across from that last pit, into A's Mancala.
+             * Player A's turn and ending in A's pits
              */
-            if (turnA && endingPit <= 5){  //Player A's turn and ending in A's pits
-                if( previousBoard[endingPit] == 0 && !opponMancReached) {
-                    currentBoard[endingPit] = 0;
-                    int opponStones = currentBoard[endingPit + (2 * (6 - endingPit))];
-                    currentBoard[mancalaA] = currentBoard[mancalaA] + opponStones + 1;
-                    currentBoard[endingPit + (2 * (6 - endingPit))] = 0;
-                 }
-             }   
+            if (player_A_turn && pit_end <= 5) {
+                if (preBoard[pit_end] == 0 && !opponMancReached) {
+                    currentGameBoard[pit_end] = 0;
+                    int opponStones = currentGameBoard[pit_end + (2 * (6 - pit_end))];
+                    currentGameBoard[mancalaA] = currentGameBoard[mancalaA] + opponStones + 1;
+                    currentGameBoard[pit_end + (2 * (6 - pit_end))] = 0;
+                }
+            }
             /*
              * This time, B's last stone dropped lands in an empty pit on B's side, the same
              * rule applies here.
              */
-            if (!turnA && endingPit > 6){
-                if(endingPit < 13 && previousBoard[endingPit] == 0 && !opponMancReached) {
-                    currentBoard[endingPit] = 0;
-                    int opponStones = currentBoard[endingPit - (2 * (endingPit - 6))];
-                    currentBoard[mancalaB] = currentBoard[mancalaB] + opponStones + 1;
-                    currentBoard[endingPit - (2 * (endingPit - 6))] = 0;
+            if (!player_A_turn && pit_end > 6) {
+                if (pit_end < 13 && preBoard[pit_end] == 0 && !opponMancReached) {
+                    currentGameBoard[pit_end] = 0;
+                    int opponStones = currentGameBoard[pit_end - (2 * (pit_end - 6))];
+                    currentGameBoard[mancalaB] = currentGameBoard[mancalaB] + opponStones + 1;
+                    currentGameBoard[pit_end - (2 * (pit_end - 6))] = 0;
                 }
             }
 
-            // When A passes through opponents side and reaches A's side with the last
-            // stone, will require at least 8 stones in the starting pit.
-            if (turnA && opponMancReached) {
-                currentBoard[13] = previousBoard[13];
-                int nextPitToGetStone = ownPitNumber + stoneCount + 1;
+            /**
+             * When A passes through opponents side and reaches A's side with the last
+             * stone, will require at least 8 stones in the starting pit.
+             */
+            if (player_A_turn && opponMancReached) {
+                currentGameBoard[13] = preBoard[13];
+                int nextPitToGetStone = pit_own + count_stone + 1;
                 if (nextPitToGetStone > 13) {
                     nextPitToGetStone = nextPitToGetStone - 14;
                 }
-                currentBoard[nextPitToGetStone] = currentBoard[nextPitToGetStone] + 1;
-                // When A passes through opponent's side and also lands in an empty pit
-                if (previousBoard[nextPitToGetStone] == 0) {
-                    currentBoard[nextPitToGetStone] = 0;
-                    int opponStones = currentBoard[nextPitToGetStone + (2 * (6 - nextPitToGetStone))];
-                    currentBoard[mancalaA] = currentBoard[mancalaA] + opponStones + 1;
-                    currentBoard[nextPitToGetStone + (2 * (6 - nextPitToGetStone))] = 0;
+                currentGameBoard[nextPitToGetStone] = currentGameBoard[nextPitToGetStone] + 1;
+                /**
+                 * When A passes through opponent's side and also lands in an empty pit
+                 */
+                if (preBoard[nextPitToGetStone] == 0) {
+                    currentGameBoard[nextPitToGetStone] = 0;
+                    int opponStones = currentGameBoard[nextPitToGetStone + (2 * (6 - nextPitToGetStone))];
+                    currentGameBoard[mancalaA] = currentGameBoard[mancalaA] + opponStones + 1;
+                    currentGameBoard[nextPitToGetStone + (2 * (6 - nextPitToGetStone))] = 0;
                 }
             }
-            // When B passes through opponents side and reaches B's side with the last stone
-            if (!turnA && opponMancReached) {
-                currentBoard[6] = previousBoard[6];
-                int nextPitToGetStone = ownPitNumber + stoneCount + 1;
+            /**
+             * When B passes through opponents side and reaches B's side with the last stone
+             */
+            if (!player_A_turn && opponMancReached) {
+                currentGameBoard[6] = preBoard[6];
+                int nextPitToGetStone = pit_own + count_stone + 1;
                 if (nextPitToGetStone > 13) {
                     nextPitToGetStone = nextPitToGetStone - 14;
                 }
-                currentBoard[nextPitToGetStone + 7] = currentBoard[nextPitToGetStone + 7] + 1;
-                // B passes through the opponent's side and also lands in an empty pit
-                if (previousBoard[nextPitToGetStone + 7] == 0) {
-                    currentBoard[nextPitToGetStone + 7] = 0;
-                    int opponStones = currentBoard[nextPitToGetStone + 7 + (2 * (6 - (nextPitToGetStone + 7)))];
-                    currentBoard[mancalaB] = currentBoard[mancalaB] + opponStones + 1;
-                    currentBoard[nextPitToGetStone + 7 + (2 * (6 - (nextPitToGetStone + 7)))] = 0;
+                currentGameBoard[nextPitToGetStone + 7] = currentGameBoard[nextPitToGetStone + 7] + 1;
+                /**
+                 * B passes through the opponent's side and also lands in an empty pit
+                 */
+                if (preBoard[nextPitToGetStone + 7] == 0) {
+                    currentGameBoard[nextPitToGetStone + 7] = 0;
+                    int opponStones = currentGameBoard[nextPitToGetStone + 7 + (2 * (6 - (nextPitToGetStone + 7)))];
+                    currentGameBoard[mancalaB] = currentGameBoard[mancalaB] + opponStones + 1;
+                    currentGameBoard[nextPitToGetStone + 7 + (2 * (6 - (nextPitToGetStone + 7)))] = 0;
                 }
             }
-
-            // to alert listeners of change
-            for (ChangeListener l : arrayOfListeners) {
+            for (ChangeListener l : change_listener) {
                 l.stateChanged(new ChangeEvent(this));
             }
         }
     }
 
     /**
-     * Makes the current board equivalent to the previous board.
+     * Change to board to the past
      */
-    public void undoMove() {
-        currentBoard = previousBoard.clone();
-        // to alert listeners of change
-        for (ChangeListener l : arrayOfListeners) {
+    public void undo_click() {
+        currentGameBoard = preBoard.clone();
+        for (ChangeListener l : change_listener) {
             l.stateChanged(new ChangeEvent(this));
         }
     }
 
-    /*
-     * Adds a listener to ArrayList of listeners in the model.
+    /**
+     * Add 1 listener to the array
+     * 
+     * @param listener This is the listerner parameter
      */
-    public void attach(ChangeListener l) {
-        arrayOfListeners.add(l);
+    public void attach(ChangeListener listener) {
+        change_listener.add(listener);
     }
 }

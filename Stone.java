@@ -1,95 +1,101 @@
+
+/**
+ * This Stone class will create stones,
+ * set the number stone per row, set stone color,
+ * set width and height of the stone in the pit, set the number of stone in each pit.
+ */
+import java.awt.*;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Graphics;
 import javax.swing.Icon;
 import java.awt.Component;
 import java.awt.geom.Ellipse2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+
 public class Stone implements Icon {
 
-    private static final int MAX_STONE_PER_ROW = 5;
-    private static final int DIAMETER = 15;
-    private int numberOfStones;
-    private Color colorOfStone;
-    private int widthOfStone;
-    private int heightOfStone;
-
-    public Stone(int count) {
-        numberOfStones = count;
-        colorOfStone = Color.BLACK;
-        widthOfStone = MAX_STONE_PER_ROW * DIAMETER;
-        heightOfStone = MAX_STONE_PER_ROW * DIAMETER;
+    private static final int STONE_PER_ROW = 5;
+    private static final int DIAMETER_OF_PIT = 15;
+    private int stone_height;
+    private int stone_width;
+    private Color stone_color;
+    private int stone_total;
+    private Image img = null;
+    public Stone(int c) {
+        stone_total = c;
+        stone_color = Color.BLACK;
+        stone_width = STONE_PER_ROW * DIAMETER_OF_PIT;
+        stone_height = STONE_PER_ROW * DIAMETER_OF_PIT;
     }
 
     @Override
     public void paintIcon(Component c, Graphics g, int x, int y) {
         Graphics2D g2 = (Graphics2D) g;
-        for (int i = 1; i <= numberOfStones; i++) {
+        try{
+            img = ImageIO.read(new File("./stone.png"));
+        } catch (IOException e) {
+        }
+
+        for (int i = 1; i <= stone_total; i++) {
             if (i == 1)
-                x = DIAMETER;
-            else if ((i - 1) % MAX_STONE_PER_ROW == 0) {
-                x = DIAMETER;
-                y += (DIAMETER + 1);
+                x = DIAMETER_OF_PIT;
+            else if ((i - 1) % STONE_PER_ROW == 0) {
+                x = DIAMETER_OF_PIT;
+                y += (DIAMETER_OF_PIT + 1);
             } else
-                x += (DIAMETER + 1);
-            Ellipse2D.Double stone = new Ellipse2D.Double(x, y, DIAMETER, DIAMETER);
-            g2.setColor(colorOfStone);
-            g2.fill(stone);
+                x += (DIAMETER_OF_PIT + 1);
+            g2.drawImage(img, x, y, null);
         }
     }
 
     /**
-     * Get width of the stones.
-     * 
-     * @return width
+     * @return width This will return the width of the stone
      */
     @Override
     public int getIconWidth() {
-        return widthOfStone;
+        return stone_width;
     }
 
     /**
-     * Get height of the stones.
-     * 
-     * @return height
+     * @return height This will return the height of the stone
      */
     @Override
     public int getIconHeight() {
-        return heightOfStone;
+        return stone_height;
     }
 
     /**
-     * Sets the number of stones in each pit.
-     * 
-     * @param numberOfStones number of stones per pit
+     * @param stone_total This is the number of stones parameter
      */
-    public void setNumberOfStones(int numberOfStones) {
-        this.numberOfStones = numberOfStones;
+    public void setstone_total(int stone_total) {
+        this.stone_total = stone_total;
     }
 
     /**
-     * Sets the color for the stones.
-     * 
-     * @param theColor color of the stones
+     * @param theColor This is the color of the stones parameter
      */
     public void setColorOfStone(Color theColor) {
-        colorOfStone = theColor;
+        stone_color = theColor;
     }
 
     /**
-     * Sets the width of the stone.
-     * 
-     * @param width of stone
+     * @param width This is the of stone width parameter
      */
     public void setIconWidth(int width) {
-        this.widthOfStone = width;
+        this.stone_width = width;
     }
 
     /**
-     * sets the height of the stone.
-     * 
-     * @param height of stone
+     * @param height This is the height of stone parameter
      */
     public void setIconHeight(int height) {
-        this.heightOfStone = height;
+        this.stone_height = height;
     }
 }
