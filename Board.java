@@ -42,8 +42,8 @@ public class Board implements BoardDesign {
     /**
      * Add stones to the pits
      * 
-     * @param pits     - all JButtons of pits
-     * @param pitsData - number of stones in each pit
+     * @param pits This is all of pits
+     * @param pitsData This is the number of stones in each pit
      */
     @Override
     public void addStonesToPits(ArrayList<JButton> pits, int[] pitsData) {
@@ -65,8 +65,8 @@ public class Board implements BoardDesign {
     /**
      * Add all the pits and labels to the board
      * 
-     * @param pits  - list of all JButtons of pits
-     * @param label - main Mancala Board
+     * @param pits This is the list of all of pits
+     * @param label This is the game board
      */
     @Override
     public void addPitsToBoard(ArrayList<JButton> pits, JLabel label) {
