@@ -18,22 +18,23 @@ public class BoardModel {
 
     private int[] previousBoard;
     private int[] currentBoard;
-    private boolean lastStoneOnBoard;
+    private boolean mancalaMaker;
     private ArrayList<ChangeListener> arrayOfListeners; // will only contain View Listener
     private int numberOfUndos;
-    private static final int NUMBER_OF_PITS = 14;
+    private static final int numPits = 14;
 
     // Position of Mancala A and B in the Array
-    private static final int MANCALA_A = 6;
-    private static final int MANCALA_B = 13;
+    //[Apit1,Apit2,Apit3,Apit4,Apit5,Apit6,mancalaA,Bpit1,Bpit2,Bpit3,Bpit4,Bpit5,Bpit6,mancalaB]
+    private static final int mancalaA = 6;
+    private static final int mancalaB = 13;
 
     /**
      * Constructs an empty MancalaBoardModel.
      */
     public BoardModel() {
-        currentBoard = new int[NUMBER_OF_PITS];
-        previousBoard = currentBoard.clone(); // or null?
-        lastStoneOnBoard = false;
+        currentBoard = new int[numPits];
+        previousBoard = currentBoard.clone();
+        mancalaMaker = false;
         arrayOfListeners = new ArrayList<>();
         numberOfUndos = 0;
     }
@@ -42,15 +43,15 @@ public class BoardModel {
      * Sets the number of stones in each pit in the mancala board, excluding the
      * mancalas.
      * 
-     * @param stonesPerPit the number of stones in each pit
+     * @param numStones the number of stones in each pit
      */
-    public void initializeTheBoard(int stonesPerPit) {
+    public void initializeTheBoard(int numStones) {
 
         for (int i = 0; i < currentBoard.length; i++) {
-            if (i == MANCALA_A || i == MANCALA_B) {
+            if (i == mancalaA || i == mancalaB) {
                 currentBoard[i] = 0;
             } else {
-                currentBoard[i] = stonesPerPit;
+                currentBoard[i] = numStones;
             }
         }
         previousBoard = currentBoard.clone();
@@ -60,9 +61,9 @@ public class BoardModel {
      * Constructs a Mancala Board with specified number of stones in each pit, and 0
      * stones in Mancalas
      * 
-     * @param stonesPerPit the number of stones each pit initially contains
+     * @param numStones the number of stones each pit initially contains
      */
-    public BoardModel(int stonesPerPit) {
+    public BoardModel(int numStones) {
         /*
          * index 0 - 6: player A, index 7 - 13: B
          * index 6 and 13 correspond to Mancalas
@@ -71,12 +72,12 @@ public class BoardModel {
          * B1 - B6 - Mancala B
          */
         currentBoard = new int[] {
-                stonesPerPit, stonesPerPit, stonesPerPit, stonesPerPit,
-                stonesPerPit, stonesPerPit, 0, stonesPerPit, stonesPerPit,
-                stonesPerPit, stonesPerPit, stonesPerPit, stonesPerPit, 0
+                numStones, numStones, numStones, numStones,
+                numStones, numStones, 0, numStones, numStones,
+                numStones, numStones, numStones, numStones, 0
         };
         previousBoard = currentBoard.clone();
-        lastStoneOnBoard = false;
+        mancalaMaker = false;
         arrayOfListeners = new ArrayList<>();
         numberOfUndos = 0;
     }
@@ -115,9 +116,9 @@ public class BoardModel {
      * @return the boolean value of lastStoneInMancala; true allows player another
      *         turn
      */
-    public boolean isLastStoneOnBoard() // we will use this in Control to prompt player to go again
+    public boolean isMancalaMaker() // we will use this in Control to prompt player to go again
     {
-        return lastStoneOnBoard;
+        return mancalaMaker;
     }
 
     /**
@@ -134,16 +135,17 @@ public class BoardModel {
      */
     public int checkWinner(int emptyPitFlag) {
 
-        if (emptyPitFlag == 1) { // only all A pits are empty
-            moveStonesToMancala(7, MANCALA_B); // move leftover stones to Mancala B
-        } else if (emptyPitFlag == 2) { // only all B pits are empty
-            moveStonesToMancala(0, MANCALA_A); // move leftover stones to Mancala A
+        if (emptyPitFlag == 1) { // If A's Pits are empty
+            moveStonesToMancala(7, mancalaB); // move stones in BPits to B's mancala pit
+
+        } else if (emptyPitFlag == 2) { // If B's Pits are empty
+            moveStonesToMancala(0, mancalaA); // move stones in APits to A's mancala pit
         }
 
-        // Compare number of stones in two mancalas
-        if (currentBoard[MANCALA_A] > currentBoard[MANCALA_B])
+        // Compare A's Mancala Pit to B's
+        if (currentBoard[mancalaA] > currentBoard[mancalaB])
             return 1;
-        else if (currentBoard[MANCALA_A] < currentBoard[MANCALA_B])
+        else if (currentBoard[mancalaA] < currentBoard[mancalaB])
             return 2;
         else
             return 3;
@@ -159,30 +161,37 @@ public class BoardModel {
      */
     public int checkIfGameOver() {
 
-        boolean mancala_A_Empty = false, mancala_B_Empty = false;
+        boolean mancalaA_Empty = false, mancalaB_Empty = false;
 
         // Check if all A's pits are empty
-        for (int pitA = 0; pitA < MANCALA_A; pitA++) {
+        for (int pitA = 0; pitA < mancalaA; pitA++) {
             if (currentBoard[pitA] != 0) {
-                mancala_A_Empty = false;
+                mancalaA_Empty = false;
                 break;
             } else
-                mancala_A_Empty = true;
+                mancalaA_Empty = true;
         }
 
         // Check if all B's pits are empty
-        for (int pitB = 7; pitB < MANCALA_B; pitB++) {
+        for (int pitB = 7; pitB < mancalaB; pitB++) {
             if (currentBoard[pitB] != 0) {
-                mancala_B_Empty = false;
+                mancalaB_Empty = false;
                 break;
             } else
-                mancala_B_Empty = true;
+                mancalaB_Empty = true;
         }
-        return mancala_A_Empty ? 1 : (mancala_B_Empty ? 2 : 0);
-        // if (mancala_A_Empty) return 1;
-        // else if (mancala_B_Empty) return 2;
+        
+        //returns which side is empty, if a side is empty
+        if(mancalaA_Empty){
+            return 1;
+        }
+        else if(mancalaB_Empty){
+            return 2;
+        }
+        else{
+            return 0;
+        }
 
-        // return 0;
     }
 
     /**
@@ -218,7 +227,7 @@ public class BoardModel {
      * 
      * @param pitNumber the pit number chosen by the user
      */
-    public void move(int pitNumber) { // pit that is pressed by user
+    public void move(int pitNumber) { 
 
         boolean turnA = true;
         int ownPitNumber = pitNumber;
@@ -228,33 +237,32 @@ public class BoardModel {
             ownPitNumber = pitNumber - 7;
         }
         if (currentBoard[pitNumber] != 0) {
-            previousBoard = currentBoard.clone(); // save board prior to move to allow undo option
-            lastStoneOnBoard = false;
-            // save the number of stones in the pit number in variable stoneCount
-            int stoneCount = currentBoard[pitNumber];
-            int oPitNumber = pitNumber;
-            int endingPit = pitNumber + stoneCount;
+            previousBoard = currentBoard.clone(); // save current board to previous board to allow for undo's
+            mancalaMaker = false;
+            int stoneCount = currentBoard[pitNumber]; //saves number of stones in selected pit
+            int oPitNumber = pitNumber; //saves origional pit number
+            int endingPit = pitNumber + stoneCount; //calculates ending pit number
 
+            //Opponent mancala will always be 13 away from ownPitNumber
             boolean opponMancReached = false;
             if (ownPitNumber + stoneCount >= 13) {
                 opponMancReached = true;
             }
 
-            // If a player's last stone lands in their own Mancala, that player gets another
-            // turn, so set lastStoneInMancala = true
+            //if stones end in your own mancala, set mancalaMaker true for an extra turn
             if (ownPitNumber + stoneCount == 6) {
-                lastStoneOnBoard = true;
+                mancalaMaker = true;
                 // System.out.println("You get another turn!");
             }
 
-            // remove stones from chosen pit and redistribute them
+            // distributes stones from selected pit
             for (int i = 1; i <= stoneCount; i++) {
                 if ((pitNumber + i) == 14) {
-                    pitNumber = -1 * i;// Looping around the board once b6 pit has been reached
+                    pitNumber = -1 * i; //after reaching opponents last pit, start from beggining
                 }
-                currentBoard[pitNumber + i] = currentBoard[pitNumber + i] + 1;
+                currentBoard[pitNumber + i] = currentBoard[pitNumber + i] + 1; //adds a stone to each pit
             }
-            // set the number of stones in specified pit number to 0
+            // removes stones from selected pit
             currentBoard[oPitNumber] = 0;
 
             /*
@@ -262,21 +270,25 @@ public class BoardModel {
              * the stones in that last pit and the stones
              * on the opponent's side that is across from that last pit, into A's Mancala.
              */
-            if (turnA && endingPit <= 5 && previousBoard[endingPit] == 0 && !opponMancReached) {
-                currentBoard[endingPit] = 0;
-                int opponStones = currentBoard[endingPit + (2 * (6 - endingPit))];
-                currentBoard[MANCALA_A] = currentBoard[MANCALA_A] + opponStones + 1;
-                currentBoard[endingPit + (2 * (6 - endingPit))] = 0;
-            }
+            if (turnA && endingPit <= 5){  //Player A's turn and ending in A's pits
+                if( previousBoard[endingPit] == 0 && !opponMancReached) {
+                    currentBoard[endingPit] = 0;
+                    int opponStones = currentBoard[endingPit + (2 * (6 - endingPit))];
+                    currentBoard[mancalaA] = currentBoard[mancalaA] + opponStones + 1;
+                    currentBoard[endingPit + (2 * (6 - endingPit))] = 0;
+                 }
+             }   
             /*
              * This time, B's last stone dropped lands in an empty pit on B's side, the same
              * rule applies here.
              */
-            if (!turnA && endingPit > 6 && endingPit < 13 && previousBoard[endingPit] == 0 && !opponMancReached) {
-                currentBoard[endingPit] = 0;
-                int opponStones = currentBoard[endingPit - (2 * (endingPit - 6))];
-                currentBoard[MANCALA_B] = currentBoard[MANCALA_B] + opponStones + 1;
-                currentBoard[endingPit - (2 * (endingPit - 6))] = 0;
+            if (!turnA && endingPit > 6){
+                if(endingPit < 13 && previousBoard[endingPit] == 0 && !opponMancReached) {
+                    currentBoard[endingPit] = 0;
+                    int opponStones = currentBoard[endingPit - (2 * (endingPit - 6))];
+                    currentBoard[mancalaB] = currentBoard[mancalaB] + opponStones + 1;
+                    currentBoard[endingPit - (2 * (endingPit - 6))] = 0;
+                }
             }
 
             // When A passes through opponents side and reaches A's side with the last
@@ -292,7 +304,7 @@ public class BoardModel {
                 if (previousBoard[nextPitToGetStone] == 0) {
                     currentBoard[nextPitToGetStone] = 0;
                     int opponStones = currentBoard[nextPitToGetStone + (2 * (6 - nextPitToGetStone))];
-                    currentBoard[MANCALA_A] = currentBoard[MANCALA_A] + opponStones + 1;
+                    currentBoard[mancalaA] = currentBoard[mancalaA] + opponStones + 1;
                     currentBoard[nextPitToGetStone + (2 * (6 - nextPitToGetStone))] = 0;
                 }
             }
@@ -308,7 +320,7 @@ public class BoardModel {
                 if (previousBoard[nextPitToGetStone + 7] == 0) {
                     currentBoard[nextPitToGetStone + 7] = 0;
                     int opponStones = currentBoard[nextPitToGetStone + 7 + (2 * (6 - (nextPitToGetStone + 7)))];
-                    currentBoard[MANCALA_B] = currentBoard[MANCALA_B] + opponStones + 1;
+                    currentBoard[mancalaB] = currentBoard[mancalaB] + opponStones + 1;
                     currentBoard[nextPitToGetStone + 7 + (2 * (6 - (nextPitToGetStone + 7)))] = 0;
                 }
             }
